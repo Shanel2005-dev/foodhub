@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MapPin, Phone, CreditCard, ArrowLeft, Clock, Store, Banknote, Check, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, CreditCard, ArrowLeft, Clock, Store, Check, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { mockEstablishments, QUARTIERS_PARAKOU, getDeliveryFee } from '../data/mock';
 
