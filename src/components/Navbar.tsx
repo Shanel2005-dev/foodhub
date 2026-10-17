@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Clock, Home, Utensils } from 'lucide-react';
+import { ShoppingCart, Clock, Home, Utensils, Store } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 
 export default function Navbar() {
@@ -20,6 +20,9 @@ export default function Navbar() {
           </Link>
           <Link to="/orders" className="flex items-center gap-1.5 hover:text-orange-200 transition-colors text-sm">
             <Clock size={17} /><span className="hidden sm:inline">Mes commandes</span>
+          </Link>
+          <Link to="/dashboard" className="flex items-center gap-1.5 hover:text-orange-200 transition-colors text-sm">
+            <Store size={17} /><span className="hidden sm:inline">Espace restaurant</span>
           </Link>
           <button
             onClick={() => navigate('/cart')}

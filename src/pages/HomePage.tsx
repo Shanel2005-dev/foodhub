@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import { Search, Star, Clock, ChevronRight, MapPin, ShoppingBag, LayoutGrid, Utensils, Flame, ShoppingBasket, Cookie, Store } from 'lucide-react';
 import { mockEstablishments, QUARTIERS_PARAKOU } from '../data/mock';
+import { useMenuStore } from '../store/menuStore';
 import { CATEGORY_LABELS, CATEGORY_ICONS, type EstablishmentCategory } from '../types';
 
 const FILTER_CATEGORIES: { key: EstablishmentCategory | 'tous'; label: string; Icon: LucideIcon }[] = [
@@ -18,13 +19,19 @@ export default function HomePage() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<EstablishmentCategory | 'tous'>('tous');
   const [activeQuartier, setActiveQuartier] = useState('');
+  const menus = useMenuStore((state) => state.menus);
 
   const filtered = mockEstablishments.filter(e => {
-    const q = search.toLowerCase();
+    const query = search.trim().toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const priceQuery = /\d/.test(search) ? search.replace(/\D/g, '') : '';
+    const menu = menus[e.id] ?? e.menu;
     const matchSearch =
-      !search ||
-      e.name.toLowerCase().includes(q) ||
-      e.menu.some(cat => cat.items.some(item => item.name.toLowerCase().includes(q)));
+      !query ||
+      e.name.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(query) ||
+      menu.some(cat => cat.items.some(item => {
+        const searchableText = `${item.name} ${item.description}`.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return searchableText.includes(query) || (!!priceQuery && String(item.price) === priceQuery);
+      }));
     const matchCat = activeCategory === 'tous' || e.category === activeCategory;
     const matchQuartier = !activeQuartier || e.quartier === activeQuartier;
     return matchSearch && matchCat && matchQuartier;
@@ -39,7 +46,7 @@ export default function HomePage() {
           alt="FoodHub Parakou"
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,rgba(50,10,0,0.90)0%,rgba(80,18,0,0.75)60%,rgba(38,7,0,0.68)100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,rgba(18,18,18,0.48)0%,rgba(28,28,28,0.36)60%,rgba(14,14,14,0.42)100%)' }} />
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center text-white w-full">
           <div className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-bold mb-6 uppercase tracking-widest" style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.28)' }}>
@@ -58,32 +65,20 @@ export default function HomePage() {
           {/* Search bar */}
           <form
             onSubmit={e => e.preventDefault()}
-            className="flex gap-2 max-w-xl mx-auto mb-8"
+            className="mx-auto mb-8 w-full max-w-xl"
           >
-            <div className="relative flex-1">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="flex items-center gap-3 rounded-xl border border-white/60 bg-white/85 px-4 shadow-lg shadow-black/20 transition focus-within:border-white focus-within:bg-white/95">
+              <Search size={18} className="shrink-0 text-gray-500" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Restaurant, plat, produit..."
-                className="w-full pl-11 pr-4 py-3 rounded-xl text-gray-800 text-sm outline-none shadow-lg"
+                placeholder="Plat, produit ou prix (ex. 1 500 FCFA)"
+                aria-label="Rechercher un restaurant, un plat, un produit ou un prix"
+                className="h-11 w-full bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-500"
               />
             </div>
           </form>
 
-          <div className="flex flex-wrap justify-center gap-6 md:gap-12">
-            {[
-              { val: '9+', lbl: 'Établissements' },
-              { val: '30 min', lbl: 'Livraison moyenne' },
-              { val: 'MoMo', lbl: 'Paiement Mobile Money' },
-              { val: '4.5★', lbl: 'Note moyenne' },
-            ].map(({ val, lbl }) => (
-              <div key={lbl} className="text-center">
-                <p className="text-2xl font-extrabold drop-shadow" style={{ color: '#fb923c' }}>{val}</p>
-                <p className="text-xs font-medium mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>{lbl}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -201,4 +196,3 @@ export default function HomePage() {
     </div>
   );
 }
-

@@ -62,12 +62,15 @@ export type OrderStatus =
   | 'en_attente'
   | 'confirmee'
   | 'en_preparation'
+  | 'prete'
+  | 'acceptee'
   | 'recuperee'
   | 'en_route'
   | 'livree'
   | 'annulee';
 
 export type PaymentMethod = 'mtn_momo' | 'moov_money' | 'especes_livraison';
+export type PaymentStatus = 'simule' | 'a_la_livraison' | 'paye_livraison' | 'rembourse_simule';
 
 export interface Livreur {
   nom: string;
@@ -94,5 +97,8 @@ export interface Order {
   quartierLivraison: string;
   pointRepereLivraison: string;
   paymentMethod: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+  customerPhone?: string;
+  rating?: number;
   livreur: Livreur | null;
 }

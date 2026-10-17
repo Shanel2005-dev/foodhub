@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Package, Star, RotateCcw, MapPin, CreditCard, Bike, CheckCircle } from 'lucide-react';
-import { mockOrders } from '../data/mock';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronDown, ChevronUp, Package, Star, RotateCcw, MapPin, CreditCard, Bike, CheckCircle, Eye } from 'lucide-react';
+import { useOrderStore } from '../store/orderStore';
 import type { OrderStatus, PaymentMethod } from '../types';
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string }> = {
   en_attente: { label: 'En attente', color: 'bg-gray-100 text-gray-600' },
   confirmee: { label: 'Confirmée', color: 'bg-blue-100 text-blue-700' },
   en_preparation: { label: 'En préparation', color: 'bg-yellow-100 text-yellow-700' },
+  prete: { label: 'Prête', color: 'bg-purple-100 text-purple-700' },
+  acceptee: { label: 'Livreur assigné', color: 'bg-indigo-100 text-indigo-700' },
   recuperee: { label: 'Récupérée', color: 'bg-purple-100 text-purple-700' },
   en_route: { label: 'En route', color: 'bg-orange-100 text-orange-700' },
   livree: { label: 'Livrée ✓', color: 'bg-green-100 text-green-700' },
@@ -22,8 +24,10 @@ const PAYMENT_LABELS: Record<PaymentMethod, string> = {
 
 export default function OrderHistoryPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [rated, setRated] = useState<Record<string, number>>({});
+  const orders = useOrderStore((state) => state.orders);
+  const rateOrder = useOrderStore((state) => state.rateOrder);
   const navigate = useNavigate();
+  const sortedOrders = [...orders].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 
   const handleReorder = (establishmentId: string) => {
     navigate(`/restaurant/${establishmentId}`);
@@ -34,18 +38,18 @@ export default function OrderHistoryPage() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Mes commandes</h1>
 
-        {mockOrders.length === 0 ? (
+        {sortedOrders.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <Package size={48} className="mx-auto mb-4 opacity-30" />
             <p>Aucune commande pour l'instant</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {mockOrders.map(order => {
+            {sortedOrders.map(order => {
               const status = STATUS_CONFIG[order.status];
               const isExpanded = expanded === order.id;
               const isDelivered = order.status === 'livree';
-              const hasRating = order.id in rated;
+              const hasRating = order.rating !== undefined;
 
               return (
                 <div key={order.id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -56,7 +60,10 @@ export default function OrderHistoryPage() {
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-gray-800 truncate">{order.establishmentName}</p>
                       <p className="text-sm text-gray-500 mt-0.5">
-                        {order.date} · {order.total.toLocaleString()} FCFA
+                        {order.date} · {(order.paymentMethod === 'especes_livraison'
+                          ? order.total
+                          : order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+                        ).toLocaleString()} FCFA à payer {order.paymentMethod === 'especes_livraison' ? 'à la livraison' : 'sur la plateforme'}
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1"><MapPin size={10} /> {order.quartierLivraison}</p>
                     </div>
@@ -79,17 +86,27 @@ export default function OrderHistoryPage() {
                         ))}
                         <div className="border-t pt-2 space-y-1">
                           <div className="flex justify-between text-sm text-gray-500">
-                            <span>Livraison</span>
+                            <span>Livraison (à payer au livreur)</span>
                             <span>{order.deliveryFee.toLocaleString()} F</span>
                           </div>
                           <div className="flex justify-between font-bold text-sm">
-                            <span>Total</span>
-                            <span style={{ color: '#EA580C' }}>{order.total.toLocaleString()} FCFA</span>
+                            <span>{order.paymentMethod === 'especes_livraison' ? 'Total à remettre au livreur' : 'Montant des mets'}</span>
+                            <span style={{ color: '#EA580C' }}>
+                              {(order.paymentMethod === 'especes_livraison'
+                                ? order.total
+                                : order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+                              ).toLocaleString()} FCFA
+                            </span>
                           </div>
                         </div>
 
                         <div className="border-t pt-3 space-y-1.5 text-xs text-gray-400">
                           <p className="flex items-center gap-1"><CreditCard size={11} /> {PAYMENT_LABELS[order.paymentMethod]}</p>
+                          {order.paymentStatus === 'simule' && <p className="text-amber-700">Les mets sont à payer sur la plateforme (simulation uniquement). Les frais de livraison sont à régler au livreur à l’arrivée.</p>}
+                          {order.paymentStatus === 'a_la_livraison' && <p>Montant total à régler au livreur à la livraison (mets et frais de livraison).</p>}
+                          {order.paymentStatus === 'paye_livraison' && <p className="text-green-700">Espèces encaissées à la livraison (démo).</p>}
+                          {order.paymentStatus === 'rembourse_simule' && <p className="text-amber-700">Remboursement simulé — aucune transaction réelle.</p>}
+                          {order.customerPhone && <p>Téléphone : {order.customerPhone}</p>}
                           <p className="flex items-start gap-1"><MapPin size={11} className="mt-0.5 flex-shrink-0" /> {order.pointRepereLivraison}</p>
                           {order.livreur && (
                             <p className="flex items-center gap-1"><Bike size={11} /> Livré par {order.livreur.nom} · {order.livreur.telephone}</p>
@@ -104,13 +121,14 @@ export default function OrderHistoryPage() {
                               {[1, 2, 3, 4, 5].map(star => (
                                 <button
                                   key={star}
-                                  onClick={() => setRated(r => ({ ...r, [order.id]: star }))}
+                                  onClick={() => rateOrder(order.id, star)}
                                   className="text-2xl transition-transform hover:scale-110"
+                                  aria-label={`Noter ${star} sur 5`}
                                 >
                                   <Star
                                     size={24}
-                                    className="text-gray-300 hover:text-yellow-400 transition-colors"
-                                    fill="none"
+                                    className={star <= (order.rating ?? 0) ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}
+                                    fill={star <= (order.rating ?? 0) ? 'currentColor' : 'none'}
                                   />
                                 </button>
                               ))}
@@ -120,21 +138,26 @@ export default function OrderHistoryPage() {
 
                         {isDelivered && hasRating && (
                           <div className="mt-3 text-xs text-green-600 font-medium bg-green-50 rounded-xl px-3 py-2">
-                            <CheckCircle size={13} className="inline mr-1 align-text-bottom" /> Merci pour votre avis ! Vous avez noté {rated[order.id]}/5
+                            <CheckCircle size={13} className="inline mr-1 align-text-bottom" /> Merci pour votre avis ! Vous avez noté {order.rating}/5
                           </div>
                         )}
 
-                        {/* Reorder */}
-                        <button
-                          onClick={() => handleReorder(order.establishmentId)}
-                          className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 transition-colors"
-                          style={{ borderColor: '#EA580C', color: '#EA580C' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#EA580C'; (e.currentTarget as HTMLElement).style.color = 'white'; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#EA580C'; }}
-                        >
-                          <RotateCcw size={15} />
-                          Recommander chez {order.establishmentName.split(' ').slice(0, 2).join(' ')}
-                        </button>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <Link
+                            to={`/tracking?order=${encodeURIComponent(order.id)}`}
+                            className="flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 text-sm font-semibold"
+                            style={{ borderColor: '#EA580C', color: '#EA580C' }}
+                          >
+                            <Eye size={15} /> Suivre
+                          </Link>
+                          <button
+                            onClick={() => handleReorder(order.establishmentId)}
+                            className="flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 text-sm font-semibold"
+                            style={{ borderColor: '#EA580C', color: '#EA580C' }}
+                          >
+                            <RotateCcw size={15} /> Recommander
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

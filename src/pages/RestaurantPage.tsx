@@ -2,17 +2,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Clock, MapPin, Plus, ShoppingCart, ArrowLeft, Lock, ShoppingBasket } from 'lucide-react';
 import { mockEstablishments } from '../data/mock';
 import { useCartStore } from '../store/cartStore';
+import { useMenuStore } from '../store/menuStore';
 import { CATEGORY_LABELS, CATEGORY_ICONS, type MenuItem } from '../types';
 
 export default function RestaurantPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem, items, itemCount } = useCartStore();
+  const menu = useMenuStore((state) => id ? state.menus[id] : undefined);
   const estab = mockEstablishments.find(e => e.id === id);
 
   if (!estab) return <div className="text-center py-20 text-gray-400">Établissement introuvable</div>;
 
   const CategoryIcon = CATEGORY_ICONS[estab.category];
+  const establishmentMenu = menu ?? estab.menu;
   const getCount = (itemId: string) => items.find(ci => ci.item.id === itemId)?.quantity ?? 0;
 
   const handleAdd = (item: MenuItem) => {
@@ -77,7 +80,7 @@ export default function RestaurantPage() {
         )}
 
         {/* Menu */}
-        {estab.menu.map(category => (
+        {establishmentMenu.map(category => (
           <div key={category.name} className="mb-8">
             <h2 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">{category.name}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -16,7 +16,7 @@ export default function CartPage() {
     ? getDeliveryFee(establishment.quartier, quartierLivraison)
     : null;
   const discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
-  const total = subtotal + (deliveryFee ?? 0) - discount;
+  const total = subtotal - discount;
   const minNotMet = establishment && subtotal < establishment.minOrderAmount;
 
   const handlePromo = () => {
@@ -108,6 +108,11 @@ export default function CartPage() {
               Frais de livraison depuis {establishment?.quartier} → {quartierLivraison} : <strong>{deliveryFee.toLocaleString()} FCFA</strong>
             </p>
           )}
+          {quartierLivraison && deliveryFee !== null && (
+            <p className="mt-2 rounded-lg bg-orange-50 px-3 py-2 text-xs font-medium text-orange-800">
+              Les frais de livraison ne sont pas inclus dans le paiement sur la plateforme. Ils sont à régler directement au livreur à l’arrivée.
+            </p>
+          )}
         </div>
 
         {/* Promo code */}
@@ -144,7 +149,7 @@ export default function CartPage() {
             <span>Sous-total</span><span>{subtotal.toLocaleString()} FCFA</span>
           </div>
           <div className="flex justify-between text-gray-600 text-sm">
-            <span>Frais de livraison</span>
+            <span>À régler au livreur à l’arrivée</span>
             <span>{deliveryFee !== null ? `${deliveryFee.toLocaleString()} FCFA` : '—'}</span>
           </div>
           {promoApplied && (
@@ -153,8 +158,8 @@ export default function CartPage() {
             </div>
           )}
           <div className="flex justify-between font-bold text-base border-t pt-2.5">
-            <span>Total</span>
-            <span style={{ color: '#EA580C' }}>{deliveryFee !== null ? total.toLocaleString() : '—'} FCFA</span>
+            <span>Total à payer sur la plateforme</span>
+            <span style={{ color: '#EA580C' }}>{total.toLocaleString()} FCFA</span>
           </div>
         </div>
 

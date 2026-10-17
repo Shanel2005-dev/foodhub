@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Utensils, Phone, Mail, MapPin, Heart, Smartphone, Banknote } from 'lucide-react';
+import { Utensils, Phone, Mail, MapPin, Heart, Banknote } from 'lucide-react';
+import PaymentBrandLogo from './PaymentBrandLogo';
 
 const PRIMARY = '#EA580C';
 
@@ -78,16 +79,26 @@ export default function Footer() {
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Paiements acceptés</p>
             <div className="flex gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-yellow-400 text-gray-900 text-xs font-bold px-2.5 py-1.5 rounded-lg">
-                <Smartphone size={12} /> MTN MoMo
+              <div className="flex items-center gap-1.5 bg-gray-800 text-gray-200 text-xs font-bold px-2.5 py-1.5 rounded-lg">
+                <PaymentBrandLogo brand="mtn_momo" className="w-8 h-4 object-contain rounded-full bg-yellow-400 p-0.5" />
+                MTN MoMo
               </div>
-              <div className="flex items-center gap-1.5 bg-blue-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg">
-                <Smartphone size={12} /> Moov Money
+              <div className="flex items-center gap-1.5 bg-gray-800 text-gray-200 text-xs font-bold px-2.5 py-1.5 rounded-lg">
+                <PaymentBrandLogo brand="moov_money" className="w-6 h-6 object-contain rounded" />
+                Moov Money
               </div>
               <div className="flex items-center gap-1.5 bg-green-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg">
                 <Banknote size={12} /> Espèces
               </div>
             </div>
+            <a
+              href="https://commons.wikimedia.org/wiki/File:Moov_Money_Flooz.png"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-block text-[9px] text-gray-500 hover:text-gray-300"
+            >
+              Logo Moov Africa Togo · CC BY-SA 4.0
+            </a>
           </div>
         </div>
       </div>
