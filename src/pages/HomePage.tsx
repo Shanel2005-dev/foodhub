@@ -54,7 +54,7 @@ export default function HomePage() {
           </div>
 
           <h1 className="font-extrabold leading-tight mb-4 drop-shadow-xl" style={{ fontSize: 'clamp(2.2rem,6vw,3.8rem)', textShadow: '0 2px 24px rgba(0,0,0,0.6)' }}>
-            Restos, supérettes, boutiques —<br />
+            Restos, supérettes, boutiques<br />
             <span style={{ color: '#fb923c' }}>livrés chez vous à Parakou</span>
           </h1>
 
